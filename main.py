@@ -30,15 +30,18 @@ if st.button("Process Documents"):
 
 # Test vectordb if it exists
 if 'vectordb' in st.session_state:
+    llm = rag.load_llm()
+    test_str = "What license should i apply to be a taxi driver?"
+    st.write(run_rag(vectordb, llm).invoke(test_str))
     
-    st.subheader("Test Vector Database")
+    # st.subheader("Test Vector Database")
     
-    test_queries = [
-        "What license should i apply to be a taxi driver?",
-    ]
+    # test_queries = [
+    #     "What license should i apply to be a taxi driver?",
+    # ]
     
-    if st.button("Run Tests"):
-        rag.test_vectordb(st.session_state.vectordb, test_queries)
+    # if st.button("Run Tests"):
+    #     rag.test_vectordb(st.session_state.vectordb, test_queries)
 
 # form = st.form(key="form")
 # form.subheader("Prompt")

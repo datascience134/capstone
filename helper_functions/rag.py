@@ -63,7 +63,7 @@ def load_documents(pdf_storage_path: str):
 
     return documents
 
-def chunk_documents(documents, chunk_size=1100, chunk_overlap=10):
+def chunk_documents(documents, chunk_size=1500, chunk_overlap=100):
 
     # While our document is not too long, we can still split it into smaller chunks
     # This is to ensure that we can process the document in smaller chunks
