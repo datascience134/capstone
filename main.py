@@ -58,9 +58,17 @@ llm = rag.load_llm()
 
 # Select which topic
 collection_choice = st.selectbox(
-    "Select topic:",
+    "Select use case:",
     ["License Finder", "How-to Set Up a Local Company"]
 )
+
+# Change color of a box or header based on selection
+if collection_choice == "License Finder":
+    st.markdown('<div style="background-color:#D0F0C0; padding:10px; border-radius:5px">'
+                '<b>License Finder selected</b></div>', unsafe_allow_html=True)
+else:
+    st.markdown('<div style="background-color:#ADD8E6; padding:10px; border-radius:5px">'
+                '<b>How-to Set Up a Local Company selected</b></div>', unsafe_allow_html=True)
 
 # Map to collection names
 collection_map = {

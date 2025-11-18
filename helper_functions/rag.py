@@ -73,5 +73,5 @@ def load_vectordb(_embeddings_model, collection_name, persist_dir="./vector_db")
         )
         return vectordb
     except Exception as e:
-        st.error(f"❌ Could not load collection '{collection_name}': {str(e)}")
+        st.error(f"Could not load collection '{collection_name}': {str(e)}")
         return None
