@@ -98,10 +98,14 @@ if vectordb is not None:
             </div>
         ''', unsafe_allow_html=True)
         st.markdown('''
-            Example questions: 
-                 - Which licenses do i need to be a taxi driver?
-                 - Which licenses do i need to be a cafe owner?
-                 ''')
+            <div style="font-size:14px; line-height:1.5;">
+            <b>Example questions:</b>
+            <ul>
+            <li>Which licenses do I need to be a taxi driver?</li>
+            <li>Which licenses do I need to be a cafe owner?</li>
+            </ul>
+            </div>
+            ''', unsafe_allow_html=True)
     else:
         st.markdown('''
             <div style="background-color:#ADD8E6; padding:10px; border-radius:5px">
@@ -109,9 +113,14 @@ if vectordb is not None:
             </div>
         ''', unsafe_allow_html=True)
         st.markdown('''
-            Example question: 
-                 - What do i need to take note of to start a home cafe?
-                 ''')
+            <div style="font-size:14px; line-height:1.5;">
+            <b>Example question:</b>
+            <ul>
+            <li>What do I need to take note of to start a home cafe?</li>
+            </ul>
+            </div>
+            ''', unsafe_allow_html=True)
+
     
     # user_query = st.text_input("")
     user_query = st.text_area(
