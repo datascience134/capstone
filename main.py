@@ -52,13 +52,13 @@ llm = rag.load_llm()
 # Select which topic
 collection_choice = st.selectbox(
     "Select topic:",
-    ["Licenses", "Local Company Setup"]
+    ["License Finder", "How-to Set Up a Local Company"]
 )
 
 # Map to collection names
 collection_map = {
-    "Licenses": "licenses",
-    "Local Company Setup": "localcompany_setup"
+    "License Finder": "licenses",
+    "How-to Set Up a Local Company": "localcompany_setup"
 }
 
 collection_name = collection_map[collection_choice]
