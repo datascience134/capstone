@@ -65,13 +65,13 @@ collection_choice = st.selectbox(
     ["License Finder", "How-to Set Up a Local Company"]
 )
 
-# Change color of a box or header based on selection
-if collection_choice == "License Finder":
-    st.markdown('<div style="background-color:#D0F0C0; padding:10px; border-radius:5px">'
-                '<b>License Finder selected</b></div>', unsafe_allow_html=True)
-else:
-    st.markdown('<div style="background-color:#ADD8E6; padding:10px; border-radius:5px">'
-                '<b>How-to Set Up a Local Company selected</b></div>', unsafe_allow_html=True)
+# # Change color of a box or header based on selection
+# if collection_choice == "License Finder":
+#     st.markdown('<div style="background-color:#D0F0C0; padding:10px; border-radius:5px">'
+#                 '<b>License Finder selected</b></div>', unsafe_allow_html=True)
+# else:
+#     st.markdown('<div style="background-color:#ADD8E6; padding:10px; border-radius:5px">'
+#                 '<b>How-to Set Up a Local Company selected</b></div>', unsafe_allow_html=True)
 
 # Map to collection names
 collection_map = {
@@ -86,7 +86,21 @@ vectordb = rag.load_vectordb(embeddings_model, collection_name)
 
 # Only show query interface if vectordb loaded successfully
 if vectordb is not None:
-    user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
+    # user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
+    if collection_choice == "License Finder":
+        st.markdown('''
+            <div style="background-color:#D0F0C0; padding:10px; border-radius:5px">
+                <h3 style="margin:0;">Ask about License Finder</h3>
+            </div>
+        ''', unsafe_allow_html=True)
+    else:
+        st.markdown('''
+            <div style="background-color:#ADD8E6; padding:10px; border-radius:5px">
+                <h3 style="margin:0;">Ask about How-to Set Up a Local Company</h3>
+            </div>
+        ''', unsafe_allow_html=True)
+    
+    user_query = st.text_input()
     
     if user_query:
         with st.spinner("Searching..."):
