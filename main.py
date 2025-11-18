@@ -1,7 +1,7 @@
 # Set up and run this Streamlit App
 import streamlit as st
 import pandas as pd
-from helper_functions import llm, rag, form_checker, file_handler
+from helper_functions import rag
 
 
 def check_password():
@@ -55,11 +55,6 @@ collection_choice = st.selectbox(
     ["Licenses", "Local Company Setup"]
 )
 
-# collection_choice = st.selectbox(
-#     "Select topic:",
-#     ["Licenses", "Local Company Setup", "Form Checker"]
-# )
-
 # Map to collection names
 collection_map = {
     "Licenses": "licenses",
@@ -93,168 +88,6 @@ if vectordb is not None:
                 st.error(f"Error during query: {str(e)}")
 else:
     st.warning("Vector database not loaded. Please check the logs above.")
-
-
-# # Handle different topics
-# if collection_choice == "Form Checker":
-#     st.subheader("📋 Form Validation")
-#     st.write("Upload a form (PDF) to check for errors and completeness.")
-    
-#     uploaded_file = st.file_uploader("Upload Form (PDF)", type=['pdf'])
-    
-#     if uploaded_file is not None:
-#         st.success(f"✅ File uploaded: {uploaded_file.name}")
-        
-#         if st.button("Check Form"):
-#             with st.spinner("Analyzing form..."):
-#                 # Extract text from PDF
-#                 form_content = form_checker.extract_pdf_text(uploaded_file)
-                
-#                 if form_content:
-#                     st.write(f"📄 Extracted {len(form_content)} characters from form")
-                    
-#                     # Check form using LLM
-#                     result = form_checker.check_form(llm, form_content)
-                    
-#                     if result:
-#                         st.write("**Validation Report:**")
-#                         st.write(result)
-                        
-#                         # Optional: Show extracted text in expander
-#                         with st.expander("View Extracted Form Content"):
-#                             st.text(form_content[:2000])  # Show first 2000 chars
-#                 else:
-#                     st.error("Could not extract text from PDF")
-    
-# # Handle different topics
-# if collection_choice == "Form Checker":
-#     st.subheader("📋 Form Validation")
-#     st.write("Upload a form (PDF, image, or ZIP) to check for errors and completeness.")
-    
-#     uploaded_file = st.file_uploader(
-#         "Upload image/pdf or a ZIP file of images/pdfs", 
-#         type=["png", "jpg", "jpeg", "webp", "pdf", "zip"]
-#     )
-    
-#     if uploaded_file:
-#         # Process uploaded file
-#         base64_dict = file_handler.handle_uploaded_file(uploaded_file)
-        
-#         # Show preview of processed files
-#         total_images = sum(len(images) for images in base64_dict.values())
-#         st.info(f"✅ Processed {len(base64_dict)} file(s) with {total_images} page(s)")
-        
-#         # Show image previews
-#         with st.expander("📸 Preview Form Images"):
-#             for filename, list_of_base64 in base64_dict.items():
-#                 st.write(f"**{filename}** - {len(list_of_base64)} page(s)")
-#                 for i, base64_str in enumerate(list_of_base64[:3]):  # Show first 3 pages
-#                     st.image(
-#                         f"data:image/png;base64,{base64_str}", 
-#                         caption=f"{filename} - Page {i+1}", 
-#                         width=300
-#                     )
-#                 if len(list_of_base64) > 3:
-#                     st.caption(f"... and {len(list_of_base64) - 3} more page(s)")
-        
-#         # Button to trigger validation
-#         if st.button("🔍 Check Form"):
-#             validation_reports = []
-            
-#             # Calculate total pages for progress tracking
-#             total_pages = sum(len(images) for images in base64_dict.values())
-#             progress_bar = st.progress(0)
-#             status_text = st.empty()
-#             page_counter = 0
-            
-#             with st.spinner("Analyzing form..."):
-#                 # Process each file and each page
-#                 for filename, list_of_base64 in base64_dict.items():
-#                     st.write(f"**Analyzing {filename}...**")
-                    
-#                     for page_num, base64_str in enumerate(list_of_base64, 1):
-#                         page_counter += 1
-#                         status_text.text(f"Processing page {page_counter}/{total_pages}...")
-                        
-#                         try:
-#                             # Validate each page using llm.client
-#                             report = form_checker.check_form_from_image(llm.client, base64_str)
-                            
-#                             if report:
-#                                 validation_reports.append(report)
-                                
-#                                 # Show individual page result in expander
-#                                 with st.expander(f"📄 {filename} - Page {page_num} Results"):
-#                                     st.markdown(report)
-                            
-#                             # Update progress
-#                             progress_bar.progress(page_counter / total_pages)
-                            
-#                         except Exception as e:
-#                             st.error(f"Error validating {filename} page {page_num}: {e}")
-                
-#                 # Clean up progress indicators
-#                 progress_bar.empty()
-#                 status_text.empty()
-            
-#             # Combine all reports
-#             if validation_reports:
-#                 st.success(f"✅ Validation complete! Analyzed {len(validation_reports)} page(s)")
-                
-#                 # Show combined report
-#                 st.subheader("📋 Complete Validation Report")
-#                 combined_report = form_checker.combine_validation_reports(validation_reports)
-#                 st.markdown(combined_report)
-                
-#                 # Download button
-#                 st.download_button(
-#                     label="📥 Download Full Report",
-#                     data=combined_report,
-#                     file_name=f"validation_report_{uploaded_file.name}.md",
-#                     mime="text/markdown"
-#                 )
-#             else:
-#                 st.error("No validation reports were generated")
-
-# else:
-#     # RAG-based topics (Licenses and Local Company Setup)
-    
-#     # Map to collection names
-#     collection_map = {
-#         "Licenses": "licenses",
-#         "Local Company Setup": "localcompany_setup"
-#     }
-    
-#     collection_name = collection_map[collection_choice]
-    
-#     # Load the selected collection
-#     vectordb = rag.load_vectordb(embeddings_model, collection_name)
-    
-#     # Only show query interface if vectordb loaded successfully
-#     if vectordb is not None:
-#         user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
-        
-#         if user_query:
-#             with st.spinner("Searching..."):
-#                 try:
-#                     qa_chain = rag.run_rag(vectordb, llm, collection_name)
-#                     result = qa_chain.invoke(user_query)
-                    
-#                     st.write("**Answer:**")
-#                     st.write(result['result'])
-                    
-#                     with st.expander("Source Documents"):
-#                         for i, doc in enumerate(result['source_documents']):
-#                             st.write(f"**Source {i+1}:**")
-#                             st.write(doc.page_content[:300])
-                            
-#                 except Exception as e:
-#                     st.error(f"Error during query: {str(e)}")
-#     else:
-#         st.warning("Vector database not loaded. Please check the logs above.")
-
-
-
 
 
 

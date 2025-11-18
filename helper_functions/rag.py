@@ -5,9 +5,9 @@ from langchain_core.prompts import PromptTemplate
 
 from langchain_openai import AzureChatOpenAI
 from langchain_openai import AzureOpenAIEmbeddings
-from helper_functions import prompts
 
-from helper_functions import constants
+from helper_functions import prompts, constants
+
 
 @st.cache_resource
 def load_llm():
@@ -75,76 +75,3 @@ def load_vectordb(_embeddings_model, collection_name, persist_dir="./vector_db")
     except Exception as e:
         st.error(f"❌ Could not load collection '{collection_name}': {str(e)}")
         return None
-    
-# def test_vectordb(vectordb, tests):
-#     """Comprehensive vector database test"""
-    
-#     # 1. Check if vectordb exists
-#     if vectordb is None:
-#         st.write("❌ Vector database is None!")
-#         return
-    
-#     # 2. Check document count
-#     try:
-#         count = vectordb._collection.count()
-#         st.write(f"✅ Vector database has {count} documents")
-#     except Exception as e:
-#         print(f"❌ Error getting count: {e}")
-#         return
-    
-#     if count == 0:
-#         st.write("❌ No documents in vector database!")
-#         return  
-    
-#     for query in tests:
-#         st.write(f"\n{'='*60}")
-#         st.write(f"Query: {query}")
-#         st.write('='*60)
-        
-#         try:
-#             results = vectordb.similarity_search_with_relevance_scores(query, k=3)
-            
-#             if not results:
-#                 st.write("No results found")
-#                 continue
-            
-#             for i, (doc, score) in enumerate(results):
-#                 st.write(f"\nResult {i+1} (Relevance: {score:.4f})")
-#                 st.write(f"Content: {doc.page_content[:300]}...")
-#                 st.write(f"Metadata: {doc.metadata}")
-        
-#         except Exception as e:
-#             st.write(f"❌ Error during search: {e}")
-    
-#     st.write("\n✅ Vector database test complete!")
-
-# # ⚠️⚠️⚠️ This is the key step
-# # We can set the threshold for the retriever, this is the minimum similarity score for the retrieved documents
-# retriever_w_threshold = vectordb.as_retriever(
-#         search_type="similarity_score_threshold",
-#         # There is no universal threshold, it depends on the use case
-#         search_kwargs={'score_threshold': 0.20}
-#     )
-# # The `llm` is defined earlier in the notebook (using GPT-4o-mini)
-# rag_chain = RetrievalQA.from_llm(
-#     retriever=retriever_w_threshold, llm=llm
-# )
-
-# # Now we can use the RAG pipeline to ask questions
-# # Let's ask a question that we know is in the documents
-# llm_response = rag_chain.invoke('What is Top-P sampling?')
-# print(llm_response['result'])
-
-# # Use the high-level retriever object to retrieve the relevant documents
-# retriever_w_threshold.invoke('What is Temperature in LLMs?')
-
-# # Now let's break down and see what are the "splitted_documents" that are used in the RAG pipeline
-# # We can do this by using the vectordb object that we have created
-# # k=4 is the default value for the number of retrieved documents
-# retrieved_documents = vectordb.similarity_search_with_relevance_scores("What is Top-P sampling?", k=4)
-
-
-# Compared to the rag pipelines that we used above, this cell allows a custom prompt to be used
-# This is useful for customizing the prompt to be used in the retrieval QA chain
-# The prompt below is the standard template that is used in the retrieval QA chain
-# It also includes the "documents" that are used in the prompt
