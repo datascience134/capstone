@@ -1,6 +1,5 @@
 .streamlit/secrets.toml
 __pycache__/
-vector_db/
 .idea
 .git
 
