@@ -19,89 +19,83 @@ st.markdown('''
             
     ''')
 
-# Load embeddings model
+# Load models
 embeddings_model = rag.load_emb_model()
 llm = rag.load_llm()
 
-# Select which collection to query
+# Select which topic
 collection_choice = st.selectbox(
     "Select topic:",
-    ["Licenses", "Local Company Setup"]
+    ["Licenses", "Local Company Setup", "Form Checker"]
 )
 
-# Map to collection names
-collection_map = {
-    "Licenses": "licenses",
-    "Local Company Setup": "localcompany_setup"
-}
-
-collection_name = collection_map[collection_choice]
-
-# Load the selected collection
-vectordb = rag.load_vectordb(embeddings_model, collection_name)
-
-# Only show query interface if vectordb loaded successfully
-if vectordb is not None:
-    user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
+# Handle different topics
+if collection_choice == "Form Checker":
+    st.subheader("📋 Form Validation")
+    st.write("Upload a form (PDF) to check for errors and completeness.")
     
-    if user_query:
-        with st.spinner("Searching..."):
-            try:
-                qa_chain = rag.run_rag(vectordb, llm, collection_name)
-                result = qa_chain.invoke(user_query)
+    uploaded_file = st.file_uploader("Upload Form (PDF)", type=['pdf'])
+    
+    if uploaded_file is not None:
+        st.success(f"✅ File uploaded: {uploaded_file.name}")
+        
+        if st.button("Check Form"):
+            with st.spinner("Analyzing form..."):
+                # Extract text from PDF
+                form_content = rag.extract_pdf_text(uploaded_file)
                 
-                st.write("**Answer:**")
-                st.write(result['result'])
-                
-                with st.expander("Source Documents"):
-                    for i, doc in enumerate(result['source_documents']):
-                        st.write(f"**Source {i+1}:**")
-                        st.write(doc.page_content[:300])
+                if form_content:
+                    st.write(f"📄 Extracted {len(form_content)} characters from form")
+                    
+                    # Check form using LLM
+                    result = rag.check_form(llm, form_content)
+                    
+                    if result:
+                        st.write("**Validation Report:**")
+                        st.write(result)
                         
-            except Exception as e:
-                st.error(f"Error during query: {str(e)}")
+                        # Optional: Show extracted text in expander
+                        with st.expander("View Extracted Form Content"):
+                            st.text(form_content[:2000])  # Show first 2000 chars
+                else:
+                    st.error("Could not extract text from PDF")
+
 else:
-    st.warning("Vector database not loaded. Please check the logs above.")
-
-
-
-
-
-
-
-# # Only run when button is clicked
-# if st.button("License Finder"):
-#     st.markdown('''Find the licenses that you need to apply for based on your dream business''')
-#     emb_model = rag.load_emb_model()
-#     llm = rag.load_llm()
-#     with st.spinner("Processing..."):
-#         # file_path = "./data/license_sample"
-#         file_path = "./data/licenses_full"
+    # RAG-based topics (Licenses and Local Company Setup)
+    
+    # Map to collection names
+    collection_map = {
+        "Licenses": "licenses",
+        "Local Company Setup": "localcompany_setup"
+    }
+    
+    collection_name = collection_map[collection_choice]
+    
+    # Load the selected collection
+    vectordb = rag.load_vectordb(embeddings_model, collection_name)
+    
+    # Only show query interface if vectordb loaded successfully
+    if vectordb is not None:
+        user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
         
-#         # Process documents
-#         vectordb = rag.process_docs(file_path, "licenses", emb_model)
-        
-#         # Store in session state so it persists
-#         st.session_state.vectordb = vectordb
-        
-#         st.success("RAG is ready")
-
-#     if 'vectordb' in st.session_state:
-    
-#         form = st.form(key="form")
-#         form.subheader("Prompt")
-
-#         user_prompt = form.text_area("Enter your prompt here", height=200)
-#         # submit button inside the form
-#         submitted = form.form_submit_button("Submit")
-
-#         if submitted:
-    
-#             st.toast(f"User Input Submitted - {user_prompt}")
-
-#             st.divider()
-#             response = rag.run_rag(vectordb, llm).invoke(user_prompt)
-#             st.write(response['result'])
+        if user_query:
+            with st.spinner("Searching..."):
+                try:
+                    qa_chain = rag.run_rag(vectordb, llm, collection_name)
+                    result = qa_chain.invoke(user_query)
+                    
+                    st.write("**Answer:**")
+                    st.write(result['result'])
+                    
+                    with st.expander("Source Documents"):
+                        for i, doc in enumerate(result['source_documents']):
+                            st.write(f"**Source {i+1}:**")
+                            st.write(doc.page_content[:300])
+                            
+                except Exception as e:
+                    st.error(f"Error during query: {str(e)}")
+    else:
+        st.warning("Vector database not loaded. Please check the logs above.")
 
 
 
@@ -118,43 +112,6 @@ else:
 
 
 
-# Test vectordb if it exists
-# if 'vectordb' in st.session_state:
-#     llm = rag.load_llm()
-#     # test_str = "What license should i apply to be a taxi driver?"
-#     test_str = "Which licenses should i apply to be a cafe owner?"
-#     st.write(rag.run_rag(vectordb, llm).invoke(test_str))
-    
-    # st.subheader("Test Vector Database")
-    
-    # test_queries = [
-    #     "What license should i apply to be a taxi driver?",
-    # ]
-    
-    # if st.button("Run Tests"):
-    #     rag.test_vectordb(st.session_state.vectordb, test_queries)
 
-# form = st.form(key="form")
-# form.subheader("Prompt")
 
-# user_prompt = form.text_area("Enter your prompt here", height=200)
-# # submit button inside the form
-# submitted = form.form_submit_button("Submit")
 
-# if submitted:
-    
-#     st.toast(f"User Input Submitted - {user_prompt}")
-
-#     st.divider()
-#     # st.write(llm.get_embedding(user_prompt))
-#     # st.write(llm.get_completion(user_prompt))
-#     st.write(run_rag(vectordb, llm).invoke(user_prompt))
-
-#     # response, course_details = process_user_message(user_prompt)
-#     # st.write(response)
-
-#     st.divider()
-
-    # print(course_details)
-    # df = pd.DataFrame(course_details)
-    # df 

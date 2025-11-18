@@ -13,6 +13,7 @@ pysbd
 pypdf
 pymupdf 
 PyMuPDF
+PyPDF2
 pdfminer.six
 lolviz
 chromadb
