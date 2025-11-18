@@ -1,7 +1,7 @@
 # Set up and run this Streamlit App
 import streamlit as st
 import pandas as pd
-from helper_functions import llm, rag, form_checker
+from helper_functions import llm, rag, form_checker, file_handler
 
 
 def check_password():
