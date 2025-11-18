@@ -57,8 +57,11 @@ embeddings_model = rag.load_emb_model()
 llm = rag.load_llm()
 
 # Select which topic
+st.markdown("### Select use case:")
+
+# Hide the default label by passing an empty string
 collection_choice = st.selectbox(
-    "Select use case:",
+    "",  # empty label
     ["License Finder", "How-to Set Up a Local Company"]
 )
 
