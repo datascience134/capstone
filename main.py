@@ -32,7 +32,7 @@ if st.button("Process Documents"):
 if 'vectordb' in st.session_state:
     llm = rag.load_llm()
     test_str = "What license should i apply to be a taxi driver?"
-    st.write(run_rag(vectordb, llm).invoke(test_str))
+    st.write(rag.run_rag(vectordb, llm).invoke(test_str))
     
     # st.subheader("Test Vector Database")
     
