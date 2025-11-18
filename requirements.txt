@@ -20,3 +20,5 @@ chromadb
 datasets
 langchain-chroma
 langchain-classic
+pdf2image
+Pillow

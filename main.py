@@ -55,36 +55,89 @@ collection_choice = st.selectbox(
     ["Licenses", "Local Company Setup", "Form Checker"]
 )
 
-# Handle different topics
+# # Handle different topics
+# if collection_choice == "Form Checker":
+#     st.subheader("📋 Form Validation")
+#     st.write("Upload a form (PDF) to check for errors and completeness.")
+    
+#     uploaded_file = st.file_uploader("Upload Form (PDF)", type=['pdf'])
+    
+#     if uploaded_file is not None:
+#         st.success(f"✅ File uploaded: {uploaded_file.name}")
+        
+#         if st.button("Check Form"):
+#             with st.spinner("Analyzing form..."):
+#                 # Extract text from PDF
+#                 form_content = form_checker.extract_pdf_text(uploaded_file)
+                
+#                 if form_content:
+#                     st.write(f"📄 Extracted {len(form_content)} characters from form")
+                    
+#                     # Check form using LLM
+#                     result = form_checker.check_form(llm, form_content)
+                    
+#                     if result:
+#                         st.write("**Validation Report:**")
+#                         st.write(result)
+                        
+#                         # Optional: Show extracted text in expander
+#                         with st.expander("View Extracted Form Content"):
+#                             st.text(form_content[:2000])  # Show first 2000 chars
+#                 else:
+#                     st.error("Could not extract text from PDF")
 if collection_choice == "Form Checker":
     st.subheader("📋 Form Validation")
-    st.write("Upload a form (PDF) to check for errors and completeness.")
+    st.write("Upload a form (PDF, image, or ZIP) to check for errors and completeness.")
     
-    uploaded_file = st.file_uploader("Upload Form (PDF)", type=['pdf'])
+    uploaded_file = st.file_uploader(
+        "Upload Form", 
+        type=["pdf", "png", "jpg", "jpeg", "webp", "zip"]
+    )
     
     if uploaded_file is not None:
         st.success(f"✅ File uploaded: {uploaded_file.name}")
         
         if st.button("Check Form"):
-            with st.spinner("Analyzing form..."):
-                # Extract text from PDF
-                form_content = form_checker.extract_pdf_text(uploaded_file)
+            with st.spinner("Processing form..."):
+                # Process file to get base64 images
+                files_dict = form_checker.process_form_file(uploaded_file)
                 
-                if form_content:
-                    st.write(f"📄 Extracted {len(form_content)} characters from form")
+                if files_dict:
+                    # Get total number of images
+                    total_images = sum(len(images) for images in files_dict.values())
+                    st.write(f"📄 Processed {len(files_dict)} file(s) with {total_images} image(s)")
                     
-                    # Check form using LLM
-                    result = form_checker.check_form(llm, form_content)
+                    # Show preview of images
+                    with st.expander("Preview Form Images"):
+                        for filename, base64_images in files_dict.items():
+                            st.write(f"**{filename}** ({len(base64_images)} page(s))")
+                            for i, b64 in enumerate(base64_images[:3]):  # Show first 3 pages
+                                st.image(f"data:image/png;base64,{b64}", 
+                                        caption=f"Page {i+1}", 
+                                        width=300)
+                    
+                    # Combine all images from all files
+                    all_images = []
+                    for images in files_dict.values():
+                        all_images.extend(images)
+                    
+                    # Check form using LLM with vision
+                    with st.spinner("Analyzing form with AI..."):
+                        result = form_checker.check_form_from_images(llm, all_images)
                     
                     if result:
                         st.write("**Validation Report:**")
-                        st.write(result)
+                        st.markdown(result)
                         
-                        # Optional: Show extracted text in expander
-                        with st.expander("View Extracted Form Content"):
-                            st.text(form_content[:2000])  # Show first 2000 chars
+                        # Download button for report
+                        st.download_button(
+                            label="📥 Download Report",
+                            data=result,
+                            file_name=f"validation_report_{uploaded_file.name}.txt",
+                            mime="text/plain"
+                        )
                 else:
-                    st.error("Could not extract text from PDF")
+                    st.error("Could not process the uploaded file")
 
 else:
     # RAG-based topics (Licenses and Local Company Setup)
