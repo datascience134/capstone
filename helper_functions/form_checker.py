@@ -1,5 +1,5 @@
 import streamlit as st
-from helper_functions import prompts, file_handler
+from helper_functions import prompts, file_handler, llm
 import base64
 import PyPDF2
 import io
@@ -20,53 +20,41 @@ import io
 
 
 
-def check_form_from_images(llm, base64_images):
+def check_form_from_image(client, base64_image):
     """
-    Check form using LLM with images.
-    Takes a list of base64-encoded images and validates the form.
+    Check a single form image using vision model.
     """
     try:
-        # Build the messages for vision model
-        content = [
-            {
-                "type": "text",
-                "text": prompts.form_checker_prompt_template
-            }
-        ]
-        
-        # Add all images
-        for base64_image in base64_images:
-            content.append({
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/png;base64,{base64_image}"
-                }
-            })
-        
-        # Create message
-        messages = [{"role": "user", "content": content}]
-        
-        # Invoke LLM with vision
-        response = llm.invoke(messages)
-        return response.content
-
+        report = llm.llm_image(client, prompts.form_checker_prompt_template, base64_image)
+        return report
     except Exception as e:
-        st.error(f"Error checking form: {str(e)}")
+        st.error(f"Error checking form page: {str(e)}")
         import traceback
         st.code(traceback.format_exc())
         return None
 
-def process_form_file(uploaded_file):
+
+def combine_validation_reports(reports):
     """
-    Process uploaded form file (PDF, image, or ZIP).
-    Returns dict of {filename: [base64_images]}
+    Combine multiple validation reports into one comprehensive report.
     """
-    try:
-        files_dict = file_handler.handle_uploaded_file(uploaded_file)
-        return files_dict
-    except Exception as e:
-        st.error(f"Error processing file: {str(e)}")
-        return None
+    if not reports:
+        return "No validation reports generated."
+    
+    if len(reports) == 1:
+        return reports[0]
+    
+    # Combine multiple page reports
+    combined = f"# Combined Form Validation Report\n\n"
+    combined += f"**Total Pages Analyzed:** {len(reports)}\n\n"
+    combined += "---\n\n"
+    
+    for i, report in enumerate(reports, 1):
+        combined += f"## Page {i} Validation\n\n"
+        combined += report
+        combined += "\n\n---\n\n"
+    
+    return combined
 
 # def check_form(llm, form_content):
 #     """Check form using LLM with form validation prompt."""

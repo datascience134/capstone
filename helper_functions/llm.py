@@ -80,6 +80,24 @@ def get_completion_by_messages(messages, temperature=0, top_p=1.0, max_tokens=10
 #     )
     
 #     return response.choices[0].message.content
+def llm_image(client, prompt, img_base64):  
+    response = client.chat.completions.create(
+      model="gpt-4.1", # model = "deployment_name".
+      messages=[
+          {"role": "user", "content": [
+                {"type": "text", "text": prompt},
+                {
+                    "type": "image_url",
+                    "image_url": {
+                        "url": f"data:image/png;base64,{img_base64}"
+                    }
+                }
+            ]
+          },
+      ], max_tokens=500
+    )
+    
+    return response.choices[0].message.content
 
 def post_process_llm_response(self, processing_prompt: str, response_content: str):
     
@@ -96,24 +114,6 @@ def post_process_llm_response(self, processing_prompt: str, response_content: st
         return cleaned_response
 
     
-# -------
-# -------
-
-# def get_embedding(input, model='text-embedding-ada-002'): # len 1
-#     response = client.embeddings.create(
-#         input=input,
-#         model=model
-#     )
-#     return [x.embedding for x in response.data]
-
-# def get_embedding(input, model='text-embedding-ada-002'): # len 1536
-#     """Function to generate embeddings for text using the provided model."""
-#     response = client.embeddings.create(
-#         input=input,
-#         model=model
-#     )
-#     return response.data[0].embedding
-
 
 
 

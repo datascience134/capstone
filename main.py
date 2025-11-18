@@ -85,59 +85,83 @@ collection_choice = st.selectbox(
 #                             st.text(form_content[:2000])  # Show first 2000 chars
 #                 else:
 #                     st.error("Could not extract text from PDF")
+    
+# Handle different topics
 if collection_choice == "Form Checker":
     st.subheader("📋 Form Validation")
     st.write("Upload a form (PDF, image, or ZIP) to check for errors and completeness.")
     
     uploaded_file = st.file_uploader(
-        "Upload Form", 
-        type=["pdf", "png", "jpg", "jpeg", "webp", "zip"]
+        "Upload image/pdf or a ZIP file of images/pdfs", 
+        type=["png", "jpg", "jpeg", "webp", "pdf", "zip"]
     )
     
-    if uploaded_file is not None:
-        st.success(f"✅ File uploaded: {uploaded_file.name}")
+    if uploaded_file:
+        # Process uploaded file
+        base64_dict = file_handler.handle_uploaded_file(uploaded_file)
         
-        if st.button("Check Form"):
-            with st.spinner("Processing form..."):
-                # Process file to get base64 images
-                files_dict = form_checker.process_form_file(uploaded_file)
+        # Show preview of processed files
+        total_images = sum(len(images) for images in base64_dict.values())
+        st.info(f"✅ Processed {len(base64_dict)} file(s) with {total_images} page(s)")
+        
+        # Show image previews
+        with st.expander("📸 Preview Form Images"):
+            for filename, list_of_base64 in base64_dict.items():
+                st.write(f"**{filename}** - {len(list_of_base64)} page(s)")
+                for i, base64_str in enumerate(list_of_base64[:3]):  # Show first 3 pages
+                    st.image(
+                        f"data:image/png;base64,{base64_str}", 
+                        caption=f"{filename} - Page {i+1}", 
+                        width=300
+                    )
+                if len(list_of_base64) > 3:
+                    st.caption(f"... and {len(list_of_base64) - 3} more page(s)")
+        
+        # Button to trigger validation
+        if st.button("🔍 Check Form"):
+            validation_reports = []
+            
+            # Get vision client
+            client = form_checker.get_vision_client()
+            
+            with st.spinner("Analyzing form..."):
+                # Process each file and each page
+                for filename, list_of_base64 in base64_dict.items():
+                    st.write(f"**Analyzing {filename}...**")
+                    
+                    for page_num, base64_str in enumerate(list_of_base64, 1):
+                        try:
+                            # Validate each page
+                            report = form_checker.check_form_from_image(client, base64_str)
+                            
+                            if report:
+                                validation_reports.append(report)
+                                
+                                # Show individual page result in expander
+                                with st.expander(f"📄 {filename} - Page {page_num} Results"):
+                                    st.markdown(report)
+                            
+                        except Exception as e:
+                            st.error(f"Error validating {filename} page {page_num}: {e}")
+            
+            # Combine all reports
+            if validation_reports:
+                st.success(f"✅ Validation complete! Analyzed {len(validation_reports)} page(s)")
                 
-                if files_dict:
-                    # Get total number of images
-                    total_images = sum(len(images) for images in files_dict.values())
-                    st.write(f"📄 Processed {len(files_dict)} file(s) with {total_images} image(s)")
-                    
-                    # Show preview of images
-                    with st.expander("Preview Form Images"):
-                        for filename, base64_images in files_dict.items():
-                            st.write(f"**{filename}** ({len(base64_images)} page(s))")
-                            for i, b64 in enumerate(base64_images[:3]):  # Show first 3 pages
-                                st.image(f"data:image/png;base64,{b64}", 
-                                        caption=f"Page {i+1}", 
-                                        width=300)
-                    
-                    # Combine all images from all files
-                    all_images = []
-                    for images in files_dict.values():
-                        all_images.extend(images)
-                    
-                    # Check form using LLM with vision
-                    with st.spinner("Analyzing form with AI..."):
-                        result = form_checker.check_form_from_images(llm, all_images)
-                    
-                    if result:
-                        st.write("**Validation Report:**")
-                        st.markdown(result)
-                        
-                        # Download button for report
-                        st.download_button(
-                            label="📥 Download Report",
-                            data=result,
-                            file_name=f"validation_report_{uploaded_file.name}.txt",
-                            mime="text/plain"
-                        )
-                else:
-                    st.error("Could not process the uploaded file")
+                # Show combined report
+                st.subheader("📋 Complete Validation Report")
+                combined_report = form_checker.combine_validation_reports(validation_reports)
+                st.markdown(combined_report)
+                
+                # Download button
+                st.download_button(
+                    label="📥 Download Full Report",
+                    data=combined_report,
+                    file_name=f"validation_report_{uploaded_file.name}.md",
+                    mime="text/markdown"
+                )
+            else:
+                st.error("No validation reports were generated")
 
 else:
     # RAG-based topics (Licenses and Local Company Setup)
