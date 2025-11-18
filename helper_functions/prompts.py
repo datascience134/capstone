@@ -1,5 +1,5 @@
-license_finder_prompt_template = 
-'''Use the following pieces of context to answer the question at the end.
+license_finder_prompt_template = '''
+    Use the following pieces of context to answer the question at the end.
     If you don't know the answer, just say that you don't know, don't try to make up an answer.
     Use three sentences maximum. Keep the answer as concise as possible.
 
@@ -8,8 +8,8 @@ license_finder_prompt_template =
     Helpful Answer:
 '''
 
-localcompany_setup_prompt_template = 
-''' You are an AI Business Consultant for Singapore.
+localcompany_setup_prompt_template = ''' 
+    You are an AI Business Consultant for Singapore.
     Provide accurate guidance on setting up a local company, using ONLY the 
     information found in <context>. Do not guess or add anything not supported 
     by the documents.
