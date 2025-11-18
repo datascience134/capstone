@@ -100,7 +100,7 @@ if vectordb is not None:
             </div>
         ''', unsafe_allow_html=True)
     
-    user_query = st.text_input()
+    user_query = st.text_input("")
     
     if user_query:
         with st.spinner("Searching..."):
