@@ -1,16 +1,11 @@
 import streamlit as st
-from pathlib import Path
-
 from langchain_classic.chains import RetrievalQA
 from langchain_chroma import Chroma
-from langchain_community.document_loaders import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 
 from langchain_openai import AzureChatOpenAI
 from langchain_openai import AzureOpenAIEmbeddings
 
-from openai import AzureOpenAI
 from helper_functions import constants
 
 @st.cache_resource
@@ -35,22 +30,68 @@ def load_emb_model():
     )
     return embeddings_model
 
-def run_rag(vectordb, llm):
-    # Build prompt
-    template = """Use the following pieces of context to answer the question at the end.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    Use three sentences maximum. Keep the answer as concise as possible. 
+def get_template(collection_name):
+    """Get the appropriate template based on collection."""
+    
+    templates = {
+        "licenses": 
+        """Use the following pieces of context to answer the question at the end.
+            If you don't know the answer, just say that you don't know, don't try to make up an answer.
+            Use three sentences maximum. Keep the answer as concise as possible.
 
-    {context}
-    Question: {question}
-    Helpful Answer:"""
+            {context}
+            Question: {question}
+            Helpful Answer:
+        """,
+        
+        "localcompany_setup": 
+        """You are an AI Business Consultant for Singapore.
+            Provide accurate guidance on setting up a local company, using ONLY the 
+            information found in <context>. Do not guess or add anything not supported 
+            by the documents.
+
+            Rules:
+            1. Use ONLY information from <context>.
+            2. If the user asks for steps or guidance, give clear, sequential steps.
+            3. If the information is missing, say: “I could not find this information 
+            in the provided documents.”
+            4. Keep answers concise and factual.
+
+            High-Level Roadmap:
+            1. Choosing a Company Name
+            2. Determining the Company Type
+            3. Deciding on a Financial Year End
+            4. What You Have to File Each Year
+            5. Appointing Directors, Company Secretary and Key Personnel
+            6. Share Capital
+            7. Shares and Shareholders
+            8. Registered Office Address
+            9. Constitution
+            10. Submitting Your Application to ACRA
+            11. Other Important Information
+            12. Maintaining Company Registers & Other Obligations
+
+            -----------------------------------------
+            {context}
+            Question: {question}
+            Helpful Answer:
+
+        """
+    }
+    
+    return templates.get(collection_name, templates["licenses"])
+
+def run_rag(vectordb, llm, collection_name):
+    # Get appropriate template
+    template = get_template(collection_name)
+    
     QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
 
     # Run chain
     qa_chain = RetrievalQA.from_chain_type(
         llm,
         retriever=vectordb.as_retriever(),
-        return_source_documents=True, # Make inspection of document possible
+        return_source_documents=True,
         chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
     )
 

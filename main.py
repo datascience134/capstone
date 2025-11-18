@@ -47,7 +47,7 @@ if vectordb is not None:
     if user_query:
         with st.spinner("Searching..."):
             try:
-                qa_chain = rag.run_rag(vectordb, llm)
+                qa_chain = rag.run_rag(vectordb, llm, collection_name)
                 result = qa_chain.invoke(user_query)
                 
                 st.write("**Answer:**")
