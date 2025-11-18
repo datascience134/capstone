@@ -112,32 +112,24 @@ def run_rag(vectordb, llm):
     # to use: qa_chain.invoke('What is Top-P sampling?')
 
 @st.cache_resource
+@st.cache_resource
 def load_vectordb(_embeddings_model, collection_name, persist_dir="./vector_db"):
     """
     Load a specific collection from the vector database.
+    Cached to prevent reopening connections.
     """
     try:
+        # Create vectordb - this will be cached and reused
         vectordb = Chroma(
             collection_name=collection_name,
             embedding_function=_embeddings_model,
             persist_directory=persist_dir
         )
-        
-        # Don't use _collection.count() directly - it might fail
-        # Instead, just test if it works with a simple query
-        try:
-            # Test query to verify it works
-            _ = vectordb.similarity_search("test", k=1)
-            st.success(f"✅ Loaded collection '{collection_name}'")
-        except Exception as e:
-            st.warning(f"Collection loaded but test query failed: {e}")
-        
         return vectordb
-        
     except Exception as e:
         st.error(f"❌ Could not load collection '{collection_name}': {str(e)}")
         return None
-
+    
 # def test_vectordb(vectordb, tests):
 #     """Comprehensive vector database test"""
     
