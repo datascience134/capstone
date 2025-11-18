@@ -40,17 +40,19 @@ st.set_page_config(
 
 # App title
 st.title("💡 Venturely")
-st.markdown("""
-Welcome to **Venturely**, your personal guide to starting a business in Singapore!  
 
-We combine **LLMs with official government documents** to give you **step-by-step guidance** on business registration and licensing. Whether you’re figuring out the licenses you need or the steps to set up a company, Venturely makes the process **simpler, faster, and more approachable**.  
+with st.expander("Welcome to Venturely"):
+    st.markdown('''
+             Welcome to **Venturely**, your personal guide to starting a business in Singapore!  
 
-### What You Can Do Here:
-- **License Finder**: Discover exactly which licenses your business needs based on your niche.  
-- **How-to Set Up a Local Company**: Get a clear, step-by-step roadmap for registering your company, backed by official ACRA guides.  
+            We combine **LLMs with official government documents** to give you **step-by-step guidance** on business registration and licensing. Whether you’re figuring out the licenses you need or the steps to set up a company, Venturely makes the process **simpler, faster, and more approachable**.  
 
-Let’s make starting your business less stressful and more enjoyable! 🚀
-""")
+            ### What You Can Do Here:
+            - **License Finder**: Discover exactly which licenses your business needs based on your niche.  
+            - **How-to Set Up a Local Company**: Get a clear, step-by-step roadmap for registering your company, backed by official ACRA guides.  
+
+            Let’s make starting your business less stressful and more enjoyable! 🚀
+             ''')
 
 # Load models
 embeddings_model = rag.load_emb_model()
@@ -79,6 +81,8 @@ collection_map = {
     "How-to Set Up a Local Company": "localcompany_setup"
 }
 
+st.divider()
+
 collection_name = collection_map[collection_choice]
 
 # Load the selected collection
@@ -100,7 +104,12 @@ if vectordb is not None:
             </div>
         ''', unsafe_allow_html=True)
     
-    user_query = st.text_input("")
+    # user_query = st.text_input("")
+    user_query = st.text_area(
+        "",
+        height=150,          # height in pixels
+        placeholder="Type your question here..."
+    )
     
     if user_query:
         with st.spinner("Searching..."):
