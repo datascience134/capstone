@@ -1,0 +1,10 @@
+.streamlit/secrets.toml
+__pycache__/
+vector_db/
+.idea
+.git
+
+# Jupyter Notebook
+.ipynb_checkpoints
+.DS_Store
+capstoneKM.txt
