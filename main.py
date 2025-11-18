@@ -2,8 +2,34 @@
 import streamlit as st
 import pandas as pd
 from helper_functions import llm, rag, form_checker
-# from logics.customer_query_handler import process_user_message
 
+
+def check_password():
+    """Returns `True` if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == st.secrets["password"]:
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]
+        else:
+            st.session_state["password_correct"] = False
+
+    if st.session_state.get("password_correct", False):
+        return True
+
+    st.text_input(
+        "Password", type="password", on_change=password_entered, key="password"
+    )
+    
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+    
+    return False
+
+
+if not check_password():
+    st.stop()
 
 # region <--------- Streamlit App Configuration --------->
 st.set_page_config(
