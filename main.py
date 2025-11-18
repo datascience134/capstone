@@ -8,16 +8,23 @@ from helper_functions import llm, rag
 # region <--------- Streamlit App Configuration --------->
 st.set_page_config(
     layout="centered",
-    page_title="My Streamlit App"
+    page_title="Venturely"
 )
 # endregion <--------- Streamlit App Configuration --------->
 
-st.title("Streamlit App")
+st.title("Venturely")
+
+st.markdown('''
+    This is an LLM app that will guide new entrepreneurs to register and start a business in Singapore. It consolidates official government information to provide personalized guidance on business registration and licensing. This helps to make the starting process of a business easier and more approachable.  
+            
+    ''')
 
 # Only run when button is clicked
-if st.button("Process Documents"):
+if st.button("License Finder"):
+    st.markdown('''Find the licenses that you need to apply for based on your dream business''')
     emb_model = rag.load_emb_model()
-    with st.spinner("Processing documents..."):
+    llm = rag.load_llm()
+    with st.spinner("Processing..."):
         # file_path = "./data/license_sample"
         file_path = "./data/licenses_full"
         
@@ -27,14 +34,31 @@ if st.button("Process Documents"):
         # Store in session state so it persists
         st.session_state.vectordb = vectordb
         
-        st.success("Documents processed!")
+        st.success("RAG is ready")
+
+    if 'vectordb' in st.session_state:
+    
+        form = st.form(key="form")
+        form.subheader("Prompt")
+
+        user_prompt = form.text_area("Enter your prompt here", height=200)
+        # submit button inside the form
+        submitted = form.form_submit_button("Submit")
+
+        if submitted:
+    
+            st.toast(f"User Input Submitted - {user_prompt}")
+
+            st.divider()
+            response = rag.run_rag(vectordb, llm).invoke(user_prompt)
+            st.write(response['result'])
 
 # Test vectordb if it exists
-if 'vectordb' in st.session_state:
-    llm = rag.load_llm()
-    # test_str = "What license should i apply to be a taxi driver?"
-    test_str = "Which licenses should i apply to be a cafe owner?"
-    st.write(rag.run_rag(vectordb, llm).invoke(test_str))
+# if 'vectordb' in st.session_state:
+#     llm = rag.load_llm()
+#     # test_str = "What license should i apply to be a taxi driver?"
+#     test_str = "Which licenses should i apply to be a cafe owner?"
+#     st.write(rag.run_rag(vectordb, llm).invoke(test_str))
     
     # st.subheader("Test Vector Database")
     

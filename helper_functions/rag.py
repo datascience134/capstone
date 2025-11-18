@@ -1,13 +1,10 @@
 import streamlit as st
 from pathlib import Path
 
-# from langchain.chains import RetrievalQA
 from langchain_classic.chains import RetrievalQA
 from langchain_chroma import Chroma
-# from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-# from langchain.prompts import PromptTemplate
 from langchain_core.prompts import PromptTemplate
 
 from langchain_openai import AzureChatOpenAI
@@ -15,14 +12,6 @@ from langchain_openai import AzureOpenAIEmbeddings
 
 from openai import AzureOpenAI
 from helper_functions import constants
-
-# llm = AzureOpenAI(
-#     azure_endpoint=constants.AZUREOPENAI_ENDPOINT,
-#     api_key=constants.AZUREOPENAI_API_KEY,
-#     api_version=constants.AZUREOPENAI_API_VERION,
-#     azure_deployment=constants.AZUREOPENAI_MODEL
-# )
-
 
 def load_llm():
     llm = AzureChatOpenAI(
