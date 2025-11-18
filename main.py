@@ -18,7 +18,8 @@ st.title("Streamlit App")
 if st.button("Process Documents"):
     emb_model = rag.load_emb_model()
     with st.spinner("Processing documents..."):
-        file_path = "./data/license_sample"
+        # file_path = "./data/license_sample"
+        file_path = "./data/license_full"
         
         # Process documents
         vectordb = rag.process_docs(file_path, "licenses", emb_model)
@@ -31,7 +32,8 @@ if st.button("Process Documents"):
 # Test vectordb if it exists
 if 'vectordb' in st.session_state:
     llm = rag.load_llm()
-    test_str = "What license should i apply to be a taxi driver?"
+    # test_str = "What license should i apply to be a taxi driver?"
+    test_str = "Which licenses should i apply to be a cafe owner?"
     st.write(rag.run_rag(vectordb, llm).invoke(test_str))
     
     # st.subheader("Test Vector Database")
