@@ -97,12 +97,21 @@ if vectordb is not None:
                 <h3 style="margin:0;">Ask about License Finder</h3>
             </div>
         ''', unsafe_allow_html=True)
+        st.write('''
+            Example questions: 
+                 - Which licenses do i need to be a taxi driver?
+                 - Which licenses do i need to be a cafe owner?
+                 ''')
     else:
         st.markdown('''
             <div style="background-color:#ADD8E6; padding:10px; border-radius:5px">
                 <h3 style="margin:0;">Ask about How-to Set Up a Local Company</h3>
             </div>
         ''', unsafe_allow_html=True)
+        st.write('''
+            Example question: 
+                 - What do i need to take note of to start a home cafe?
+                 ''')
     
     # user_query = st.text_input("")
     user_query = st.text_area(
