@@ -18,6 +18,19 @@ st.markdown('''
     This is an LLM app that will guide new entrepreneurs to register and start a business in Singapore. It consolidates official government information to provide personalized guidance on business registration and licensing. This helps to make the starting process of a business easier and more approachable.  
             
     ''')
+
+## Testing ----------
+
+import chromadb
+
+client = chromadb.PersistentClient(path="./vector_db")
+
+# List all collections
+collections = client.list_collections()
+st.write("Available collections:")
+for col in collections:
+    st.write(f"  - {col.name} ({col.count()} documents)")
+
 # Load embeddings model
 embeddings_model = rag.load_emb_model()
 llm = rag.load_llm()
@@ -39,23 +52,28 @@ collection_name = collection_map[collection_choice]
 # Load the selected collection
 vectordb = rag.load_vectordb(embeddings_model, collection_name)
 
-if vectordb:
-    # User query
+# Only show query interface if vectordb loaded successfully
+if vectordb is not None:
     user_query = st.text_input(f"Ask about {collection_choice.lower()}:")
     
     if user_query:
         with st.spinner("Searching..."):
-            qa_chain = rag.run_rag(vectordb, llm)
-            result = qa_chain.invoke(user_query)
-            
-            st.write("**Answer:**")
-            st.write(result['result'])
-            
-            with st.expander("Source Documents"):
-                for i, doc in enumerate(result['source_documents']):
-                    st.write(f"**Source {i+1}:**")
-                    st.write(doc.page_content[:300])
-
+            try:
+                qa_chain = rag.run_rag(vectordb, llm)
+                result = qa_chain.invoke(user_query)
+                
+                st.write("**Answer:**")
+                st.write(result['result'])
+                
+                with st.expander("Source Documents"):
+                    for i, doc in enumerate(result['source_documents']):
+                        st.write(f"**Source {i+1}:**")
+                        st.write(doc.page_content[:300])
+                        
+            except Exception as e:
+                st.error(f"Error during query: {str(e)}")
+else:
+    st.warning("Vector database not loaded. Please check the logs above.")
 
 
 
