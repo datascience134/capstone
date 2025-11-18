@@ -121,8 +121,11 @@ if collection_choice == "Form Checker":
         if st.button("🔍 Check Form"):
             validation_reports = []
             
-            # Get vision client
-            client = form_checker.get_vision_client()
+            # Calculate total pages for progress tracking
+            total_pages = sum(len(images) for images in base64_dict.values())
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            page_counter = 0
             
             with st.spinner("Analyzing form..."):
                 # Process each file and each page
@@ -130,9 +133,12 @@ if collection_choice == "Form Checker":
                     st.write(f"**Analyzing {filename}...**")
                     
                     for page_num, base64_str in enumerate(list_of_base64, 1):
+                        page_counter += 1
+                        status_text.text(f"Processing page {page_counter}/{total_pages}...")
+                        
                         try:
-                            # Validate each page
-                            report = form_checker.check_form_from_image(client, base64_str)
+                            # Validate each page using llm.client
+                            report = form_checker.check_form_from_image(llm.client, base64_str)
                             
                             if report:
                                 validation_reports.append(report)
@@ -141,8 +147,15 @@ if collection_choice == "Form Checker":
                                 with st.expander(f"📄 {filename} - Page {page_num} Results"):
                                     st.markdown(report)
                             
+                            # Update progress
+                            progress_bar.progress(page_counter / total_pages)
+                            
                         except Exception as e:
                             st.error(f"Error validating {filename} page {page_num}: {e}")
+                
+                # Clean up progress indicators
+                progress_bar.empty()
+                status_text.empty()
             
             # Combine all reports
             if validation_reports:
