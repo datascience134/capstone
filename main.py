@@ -19,7 +19,7 @@ if st.button("Process Documents"):
     emb_model = rag.load_emb_model()
     with st.spinner("Processing documents..."):
         # file_path = "./data/license_sample"
-        file_path = "./data/license_full"
+        file_path = "./data/licenses_full"
         
         # Process documents
         vectordb = rag.process_docs(file_path, "licenses", emb_model)
