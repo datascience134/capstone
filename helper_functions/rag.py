@@ -13,6 +13,7 @@ from langchain_openai import AzureOpenAIEmbeddings
 from openai import AzureOpenAI
 from helper_functions import constants
 
+@st.cache_resource
 def load_llm():
     llm = AzureChatOpenAI(
         azure_endpoint=constants.AZUREOPENAI_ENDPOINT,
@@ -24,6 +25,7 @@ def load_llm():
     )
     return llm
 
+@st.cache_resource
 def load_emb_model():
     embeddings_model = AzureOpenAIEmbeddings(
         azure_endpoint=constants.AZUREOPENAI_ENDPOINT,
@@ -79,56 +81,94 @@ def create_vectordb(embeddings_model, chunked_docs, collection_name):
 
 def process_docs(pdf_storage_path, collection_name, embeddings_model):
     docs = load_documents(pdf_storage_path)
-    st.write(f"Loaded {len(docs)} documents")
+    print(f"Loaded {len(docs)} documents")
     chunked_docs = chunk_documents(docs)
-    st.write(f"Created {len(chunked_docs)} chunks")
+    print(f"Created {len(chunked_docs)} chunks")
     if chunked_docs:
-        st.write(f"Sample chunk: {chunked_docs[0].page_content[:100]}")
+        print(f"Sample chunk: {chunked_docs[0].page_content[:100]}")
     vectordb = create_vectordb(embeddings_model, chunked_docs, collection_name)
     return vectordb
 
-def test_vectordb(vectordb, tests):
-    """Comprehensive vector database test"""
-    
-    # 1. Check if vectordb exists
-    if vectordb is None:
-        st.write("❌ Vector database is None!")
-        return
-    
-    # 2. Check document count
-    try:
-        count = vectordb._collection.count()
-        st.write(f"✅ Vector database has {count} documents")
-    except Exception as e:
-        print(f"❌ Error getting count: {e}")
-        return
-    
-    if count == 0:
-        st.write("❌ No documents in vector database!")
-        return  
-    
-    for query in tests:
-        st.write(f"\n{'='*60}")
-        st.write(f"Query: {query}")
-        st.write('='*60)
-        
-        try:
-            results = vectordb.similarity_search_with_relevance_scores(query, k=3)
-            
-            if not results:
-                st.write("No results found")
-                continue
-            
-            for i, (doc, score) in enumerate(results):
-                st.write(f"\nResult {i+1} (Relevance: {score:.4f})")
-                st.write(f"Content: {doc.page_content[:300]}...")
-                st.write(f"Metadata: {doc.metadata}")
-        
-        except Exception as e:
-            st.write(f"❌ Error during search: {e}")
-    
-    st.write("\n✅ Vector database test complete!")
+def run_rag(vectordb, llm):
+    # Build prompt
+    template = """Use the following pieces of context to answer the question at the end.
+    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    Use three sentences maximum. Keep the answer as concise as possible. 
 
+    {context}
+    Question: {question}
+    Helpful Answer:"""
+    QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
+
+    # Run chain
+    qa_chain = RetrievalQA.from_chain_type(
+        llm,
+        retriever=vectordb.as_retriever(),
+        return_source_documents=True, # Make inspection of document possible
+        chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
+    )
+
+    return qa_chain
+    # to use: qa_chain.invoke('What is Top-P sampling?')
+
+@st.cache_resource
+def load_vectordb(_embeddings_model, collection_name, persist_dir="./vector_db"):
+    """
+    Load a specific collection from the vector database.
+    """
+    try:
+        vectordb = Chroma(
+            collection_name=collection_name,
+            embedding_function=_embeddings_model,
+            persist_directory=persist_dir
+        )
+        st.success(f"✅ Loaded '{collection_name}' with {vectordb._collection.count()} documents")
+        return vectordb
+    except Exception as e:
+        st.error(f"❌ Could not load collection '{collection_name}': {e}")
+        return None
+
+# def test_vectordb(vectordb, tests):
+#     """Comprehensive vector database test"""
+    
+#     # 1. Check if vectordb exists
+#     if vectordb is None:
+#         st.write("❌ Vector database is None!")
+#         return
+    
+#     # 2. Check document count
+#     try:
+#         count = vectordb._collection.count()
+#         st.write(f"✅ Vector database has {count} documents")
+#     except Exception as e:
+#         print(f"❌ Error getting count: {e}")
+#         return
+    
+#     if count == 0:
+#         st.write("❌ No documents in vector database!")
+#         return  
+    
+#     for query in tests:
+#         st.write(f"\n{'='*60}")
+#         st.write(f"Query: {query}")
+#         st.write('='*60)
+        
+#         try:
+#             results = vectordb.similarity_search_with_relevance_scores(query, k=3)
+            
+#             if not results:
+#                 st.write("No results found")
+#                 continue
+            
+#             for i, (doc, score) in enumerate(results):
+#                 st.write(f"\nResult {i+1} (Relevance: {score:.4f})")
+#                 st.write(f"Content: {doc.page_content[:300]}...")
+#                 st.write(f"Metadata: {doc.metadata}")
+        
+#         except Exception as e:
+#             st.write(f"❌ Error during search: {e}")
+    
+#     st.write("\n✅ Vector database test complete!")
 
 # # ⚠️⚠️⚠️ This is the key step
 # # We can set the threshold for the retriever, this is the minimum similarity score for the retrieved documents
@@ -160,25 +200,3 @@ def test_vectordb(vectordb, tests):
 # This is useful for customizing the prompt to be used in the retrieval QA chain
 # The prompt below is the standard template that is used in the retrieval QA chain
 # It also includes the "documents" that are used in the prompt
-
-def run_rag(vectordb, llm):
-    # Build prompt
-    template = """Use the following pieces of context to answer the question at the end.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
-    Use three sentences maximum. Keep the answer as concise as possible. 
-
-    {context}
-    Question: {question}
-    Helpful Answer:"""
-    QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
-
-    # Run chain
-    qa_chain = RetrievalQA.from_chain_type(
-        llm,
-        retriever=vectordb.as_retriever(),
-        return_source_documents=True, # Make inspection of document possible
-        chain_type_kwargs={"prompt": QA_CHAIN_PROMPT}
-    )
-
-    return qa_chain
-    # to use: qa_chain.invoke('What is Top-P sampling?')
