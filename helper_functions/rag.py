@@ -35,60 +35,6 @@ def load_emb_model():
     )
     return embeddings_model
 
-def load_documents(pdf_storage_path: str):
-    """
-    Load PDF documents from the given directory.
-    
-    :param pdf_storage_path (str): Path to the directory containing PDF documents.
-    :return: A list of Document objects.
-    """
-
-    pdf_directory = Path(pdf_storage_path)
-    documents = []
-
-    # Load all PDFs
-    for pdf_path in pdf_directory.glob("*.pdf"):
-        loader = PyPDFLoader(str(pdf_path))
-        loaded_docs = loader.load()   # returns List[Document]
-        documents.extend(loaded_docs)
-
-    return documents
-
-def chunk_documents(documents, chunk_size=1500, chunk_overlap=100):
-
-    # While our document is not too long, we can still split it into smaller chunks
-    # This is to ensure that we can process the document in smaller chunks
-    # This is especially useful for long documents that may exceed the token limit
-    # or to keep the chunks smaller, so each chunk is more focused
-
-    # In this case, we intentionally set the chunk_size to 1100 tokens, to have the smallest document (document 2) intact
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-
-    # Split the documents into smaller chunks
-    chunked_docs  = text_splitter.split_documents(documents)
-
-    return chunked_docs 
-
-def create_vectordb(embeddings_model, chunked_docs, collection_name):
-    # Create the vector database
-    vectordb = Chroma.from_documents(
-        documents=chunked_docs,
-        embedding=embeddings_model,
-        collection_name=collection_name,
-        persist_directory="./vector_db"
-    )
-    return vectordb
-
-def process_docs(pdf_storage_path, collection_name, embeddings_model):
-    docs = load_documents(pdf_storage_path)
-    print(f"Loaded {len(docs)} documents")
-    chunked_docs = chunk_documents(docs)
-    print(f"Created {len(chunked_docs)} chunks")
-    if chunked_docs:
-        print(f"Sample chunk: {chunked_docs[0].page_content[:100]}")
-    vectordb = create_vectordb(embeddings_model, chunked_docs, collection_name)
-    return vectordb
-
 def run_rag(vectordb, llm):
     # Build prompt
     template = """Use the following pieces of context to answer the question at the end.
@@ -111,7 +57,6 @@ def run_rag(vectordb, llm):
     return qa_chain
     # to use: qa_chain.invoke('What is Top-P sampling?')
 
-@st.cache_resource
 @st.cache_resource
 def load_vectordb(_embeddings_model, collection_name, persist_dir="./vector_db"):
     """

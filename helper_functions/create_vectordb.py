@@ -1,3 +1,4 @@
+# this script was run to generate the vector_db, which was then uploaded to github and used in RAG
 from pathlib import Path
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter

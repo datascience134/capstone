@@ -19,18 +19,6 @@ st.markdown('''
             
     ''')
 
-## Testing ----------
-
-import chromadb
-
-client = chromadb.PersistentClient(path="./vector_db")
-
-# List all collections
-collections = client.list_collections()
-st.write("Available collections:")
-for col in collections:
-    st.write(f"  - {col.name} ({col.count()} documents)")
-
 # Load embeddings model
 embeddings_model = rag.load_emb_model()
 llm = rag.load_llm()
