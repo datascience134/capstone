@@ -1,7 +1,7 @@
 # Set up and run this Streamlit App
 import streamlit as st
 import pandas as pd
-from helper_functions import llm, rag
+from helper_functions import llm, rag, form_checker
 # from logics.customer_query_handler import process_user_message
 
 
@@ -42,13 +42,13 @@ if collection_choice == "Form Checker":
         if st.button("Check Form"):
             with st.spinner("Analyzing form..."):
                 # Extract text from PDF
-                form_content = rag.extract_pdf_text(uploaded_file)
+                form_content = form_checker.extract_pdf_text(uploaded_file)
                 
                 if form_content:
                     st.write(f"📄 Extracted {len(form_content)} characters from form")
                     
                     # Check form using LLM
-                    result = rag.check_form(llm, form_content)
+                    result = form_checker.check_form(llm, form_content)
                     
                     if result:
                         st.write("**Validation Report:**")
