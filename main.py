@@ -116,7 +116,8 @@ if vectordb is not None:
             <div style="font-size:14px; line-height:1.5;">
             <b>Example question:</b>
             <ul>
-            <li>What do I need to take note of to start a home cafe?</li>
+            <li>What do I have to file each year after setting up my company?</li>
+            <li>What are the requirements for appointing a company secretary?</li>
             </ul>
             </div>
             ''', unsafe_allow_html=True)
