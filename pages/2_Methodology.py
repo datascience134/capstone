@@ -1,21 +1,72 @@
 import streamlit as st
-import pandas as pd
-import json
 
+st.title("Methodology")
 
-# Load the JSON file
-filepath = './data/courses-full.json'
-with open(filepath, 'r') as file:
-    json_string = file.read()
-    dict_of_courses = json.loads(json_string)
-    print(dict_of_courses)
+mermaid_chart = """
+```mermaid
+graph TB
+    Start([🚀 User Opens Application]) --> Auth{🔐 Password<br/>Protection}
+    Auth -->|Incorrect| AuthFail[❌ Access Denied]
+    Auth -->|Correct| SelectUseCase[📋 Select Use Case]
+    
+    SelectUseCase --> Choice{Which Service?}
+    
+    Choice -->|Option 1| License[🎫 License Finder]
+    Choice -->|Option 2| Company[🏢 Company Setup Guide]
+    Choice -->|Option 3| Form[📄 Form Checker]
+    
+    subgraph PreProcessing["🔧 Pre-Processing Done Once"]
+        P1[Download PDFs] --> P2[Load PDFs]
+        P2 --> P3[Chunk Text<br/>Size: 1500 chars<br/>Overlap: 100 chars]
+        P3 --> P4[Generate Embeddings<br/>Azure OpenAI]
+        P4 --> P5[(Chroma Vector DB<br/>Collection: licenses<br/>Collection: localcompany)]
+    end
+    
+    License --> L1[Load Vector DB:<br/>licenses]
+    Company --> C1[Load Vector DB:<br/>localcompany_setup]
+    
+    L1 --> L2[💭 User Enters Question]
+    C1 --> C2[💭 User Enters Question]
+    
+    L2 --> L3[Embed Query]
+    C2 --> C3[Embed Query]
+    
+    L3 --> L4[Similarity Search<br/>k=4 documents]
+    C3 --> C4[Similarity Search<br/>k=4 documents]
+    
+    L4 --> L5[Build Prompt:<br/>Context + Question]
+    C4 --> C5[Build Prompt:<br/>Context + Question]
+    
+    L5 --> L6[🤖 Azure OpenAI<br/>GPT-4]
+    C5 --> C6[🤖 Azure OpenAI<br/>GPT-4]
+    
+    L6 --> L7[📤 Answer + Sources]
+    C6 --> C7[📤 Answer + Sources]
+    
+    Form --> F1[📤 Upload Form<br/>PDF/Image/ZIP]
+    F1 --> F2[🖼️ Convert to Images<br/>Base64 Encode]
+    F2 --> F3[👁️ Azure OpenAI<br/>Vision Model]
+    F3 --> F4[🔍 Validate Form<br/>Check Completeness]
+    F4 --> F5[📊 Generate Report<br/>Issues + Recommendations]
+    
+    L7 --> End([✅ End])
+    C7 --> End
+    F5 --> End
+    
+    AuthFail --> EndFail([❌ End])
+    
+    P5 -.->|Persistent Storage| L1
+    P5 -.->|Persistent Storage| C1
+    
+    style Start fill:#90EE90
+    style End fill:#90EE90
+    style EndFail fill:#FFB6C1
+    style PreProcessing fill:#E6F3FF,stroke:#333,stroke-width:2px
+    style P5 fill:#87CEEB
+    style L6 fill:#FFE6CC
+    style C6 fill:#FFE6CC
+    style F3 fill:#FFE6CC
+```
+"""
 
-# Extract the value of the `dict_of_courses` dictionary
-# If you are not sure what the dictionary looks like, you can print it out
-list_of_dict = []
-for course_name, details_dict in dict_of_courses.items():
-    list_of_dict.append(details_dict)
-
-# display the `dict_of_course` as a Pandas DataFrame
-df = pd.DataFrame(list_of_dict)
-df
+st.markdown(mermaid_chart)
